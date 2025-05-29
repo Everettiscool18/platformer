@@ -148,6 +148,9 @@ public class Level {
 		throwPlayerWinEvent();
 	}
 
+	
+
+
 	public void update(float tslf) {
 		if (active) {
 			// Update the player
@@ -197,7 +200,38 @@ public class Level {
 	//Your code goes here! 
 	//Please make sure you read the rubric/directions carefully and implement the solution recursively!
 	private void water(int col, int row, Map map, int fullness) {
+		Water w = null;
+		if (fullness == 3) {
+			w = new Water (col, row, tileSize, tileset.getImage("Full_water"), this, fullness);
+		} else if (fullness == 2) {
+			w = new Water (col, row, tileSize, tileset.getImage("Half_water"), this, fullness);
+		} else if (fullness == 1) {
+			w = new Water (col, row, tileSize, tileset.getImage("Quarter_water"), this, fullness);
+		} else if (fullness == 0) {
+			w = new Water (col, row, tileSize, tileset.getImage("Falling_water"), this, fullness);
+		}		
+		map.addTile(col,row,w);
+		int f = 0;
+		if (fullness-1 >= 1) {
+			f = fullness-1;
+		} else {
+			f = 1;
+		}
+		if (row+1 < map.getTiles()[col].length && !(map.getTiles()[col][row+1] instanceof Water) && (!map.getTiles()[col][row+1].isSolid())) {
+				if (row+2 < map.getTiles()[col].length&&map.getTiles()[col][row+2].isSolid()) {
+					water(col, row+1, map, 3);
+				}else{
+					water(col, row+1, map, 0);
+				}
+			} else if ((row+1<map.getTiles()[col].length)&&(map.getTiles()[col][row+1].isSolid()) ) {
+				if(col+1 < map.getTiles().length && !(map.getTiles()[col+1][row] instanceof Water)) {
+					water(col+1, row, map, f);
+				}
+				if(col-1 >= 0 && !(map.getTiles()[col-1][row] instanceof Water)) {
+					water(col-1, row, map, f);
+				}
 		
+		}
 	}
 
 
