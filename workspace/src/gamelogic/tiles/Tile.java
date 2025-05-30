@@ -59,6 +59,9 @@ public class Tile{
 	public int getCol() {
 		return (int)(position.x/size);
 	}
+	public void setImage(BufferedImage image) {
+		this.image = image;
+	}
 	
 	public int getSize() {
 		return size;
