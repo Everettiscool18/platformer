@@ -256,7 +256,7 @@ private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<G
 					water(col+1, row, map, f);
 				}
 				if(col-1 >= 0 && !(map.getTiles()[col-1][row] instanceof Water)) {
-					water(col-1, row, map, f);
+					water(col-1, row, map, f); 
 				}
 		
 		}

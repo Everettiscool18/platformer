@@ -13,9 +13,8 @@ import gamelogic.tiles.Tile;
 public class Player extends PhysicsObject{
 	public float walkSpeed = 400;
 	public float jumpPower = 1350;
-
-	private boolean isJumping = false;
-
+	private int jumpAmount = 0;
+	private boolean wasJumpKeyDown = false;
 	public Player(float x, float y, Level level) {
 	
 		super(x, y, level.getLevelData().getTileSize(), level.getLevelData().getTileSize(), level);
@@ -34,13 +33,24 @@ public class Player extends PhysicsObject{
 		if(PlayerInput.isRightKeyDown()) {
 			movementVector.x = +walkSpeed;
 		}
-		if(PlayerInput.isJumpKeyDown() && !isJumping) {
+		boolean jumpKeyDown = PlayerInput.isJumpKeyDown();
+		if(jumpKeyDown && !wasJumpKeyDown &&jumpAmount<1) {
+			
+			System.out.print("Jump amount");
+			System.out.println(jumpAmount);
 			movementVector.y = -jumpPower;
-			isJumping = true;
+			jumpAmount++;
+			
 		}
 		
-		isJumping = true;
-		if(collisionMatrix[BOT] != null) isJumping = false;
+		// isJumping = true;
+		if(collisionMatrix[BOT] != null) {
+			
+			jumpAmount = 0;
+			System.out.println("Reset the jump thing");
+		
+		}
+		wasJumpKeyDown = jumpKeyDown;
 	}
 
 	@Override
