@@ -47,7 +47,7 @@ public class Player extends PhysicsObject{
 		if(collisionMatrix[BOT] != null) {
 			
 			jumpAmount = 0;
-			System.out.println("Reset the jump thing");
+			// System.out.println("Reset the jump thing");
 		
 		}
 		wasJumpKeyDown = jumpKeyDown;

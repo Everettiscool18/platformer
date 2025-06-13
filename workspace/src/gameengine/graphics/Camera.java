@@ -30,7 +30,7 @@ public class Camera {
 	private float borderLeft;
 	private float borderRight;
 	private float borderBot;
-	
+	private boolean smokeCamera = false;
 	private Vector2D goalPosition;
 	
 	public Camera(int width, int height, int borderLeft, int borderRight, int borderBot) {
@@ -63,7 +63,39 @@ public class Camera {
 			if(-setValue < diffY && diffY < setValue) position.y = goalPosition.y;
 		}
 	}
-	
+
+	public boolean getSmokeValue() {
+		return smokeCamera;
+	}
+
+
+public void toggleSmokeCamera() {
+    smokeCamera = !smokeCamera;
+
+    if(smokeCamera) {
+
+        width = 10;
+        height = 10;
+
+        if (player != null) {
+            calulateGoalPositon();
+            checkBorders();
+            position.x = goalPosition.x;
+            position.y = goalPosition.y;
+        }
+    } else {
+        width = Main.SCREEN_WIDTH;
+        height = Main.SCREEN_HEIGHT;
+
+        if (player != null) {
+            calulateGoalPositon();
+            checkBorders();
+            position.x = goalPosition.x;
+            position.y = goalPosition.y;
+        }
+    }
+}
+
 	private void checkBorders() {
 		if(borderLeft != -1 && goalPosition.x < borderLeft) goalPosition.x = borderLeft;
 		if(borderRight != -1 && borderRight < goalPosition.x + width) goalPosition.x = borderRight - width; 

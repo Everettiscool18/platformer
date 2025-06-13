@@ -3,6 +3,8 @@ package gamelogic.level;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import gameengine.PhysicsObject;
 import gameengine.graphics.Camera;
@@ -35,10 +37,11 @@ public class Level {
 
 	private ArrayList<Enemy> enemiesList = new ArrayList<>();
 	private ArrayList<Flower> flowers = new ArrayList<>();
-
+	private ArrayList<Water> waterList = new ArrayList<>();
+	private ArrayList<Gas> gasList = new ArrayList<>();
 	private List<PlayerDieListener> dieListeners = new ArrayList<>();
 	private List<PlayerWinListener> winListeners = new ArrayList<>();
-
+	private CompletableFuture<?> waterFuture = null;
 	private Mapdata mapdata;
 	private int width;
 	private int height;
@@ -62,7 +65,9 @@ public class Level {
 	public void restartLevel() {
 		int[][] values = mapdata.getValues();
 		Tile[][] tiles = new Tile[width][height];
-
+		waterList.clear();
+		gasList.clear();
+		waterFuture = null;
 		for (int x = 0; x < width; x++) {
 			int xPosition = x;
 			for (int y = 0; y < height; y++) {
@@ -152,9 +157,10 @@ public class Level {
 	
 	// precondition: col, row, map, numSquaresToFill, and placedThisRound are all defined.
 	// postcondition: Will start adding gas starting from the three above, left one, right one, and finally the bottom and continuing this pattern till numSquaresToFill is equal to zero
-private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
+	private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
        	 	Gas g = new Gas (col, row, tileSize, tileset.getImage("GasOne"), this, 0);
 			map.addTile(col, row, g);
+			gasList.add(g);
 			placedThisRound.add(g);
 			numSquaresToFill--;
 			while((numSquaresToFill>0)&&placedThisRound.size()>0) {
@@ -167,6 +173,7 @@ private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<G
 						if ((map.getTiles().length>colIndex)&&(map.getTiles()[colIndex].length>rowIndex)&&(map.getTiles()[colIndex][rowIndex] instanceof Gas == false)&& (map.getTiles()[colIndex][rowIndex].isSolid()==false)) {
 							Gas x = new Gas (colIndex, rowIndex, tileSize, tileset.getImage("GasOne"), this, 0);
 							map.addTile(colIndex,rowIndex, x);
+							gasList.add(x);
 							placedThisRound.add(x);
 							numSquaresToFill--;
 						}
@@ -178,6 +185,65 @@ private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<G
 			}
 	}	
 
+
+	public void drowning() {
+    int playerCol = (int) (player.getX() / tileSize);
+    int playerRow = (int) (player.getY() / tileSize);
+
+    for (int i = 0; i < waterList.size(); i++) {
+        if (playerCol == waterList.get(i).getCol() &&
+            playerRow == waterList.get(i).getRow() &&
+            waterList.get(i).getFullness() == 3) {
+				if (waterFuture == null) {
+					waterFuture = CompletableFuture.runAsync(() -> {
+                // Your code here executes after 4 seconds!
+                onPlayerDeath();
+            }, CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS));
+            System.out.println("waterFuture set: " + waterFuture);
+            return; // <--- This prevents resetting to null below!
+				} else {
+					return;
+				}
+
+
+
+			}
+            
+        }
+		if (waterFuture != null) {
+			waterFuture.cancel(true);
+		waterFuture = null;
+		System.out.println("waterFuture reset to null");
+		}
+		
+    }
+	
+
+	public void blind() {
+		int playerCol = (int) (player.getX() / tileSize);
+    	int playerRow = (int) (player.getY() / tileSize);
+		for (int i=0; i<gasList.size(); i++) {
+			if (playerCol == gasList.get(i).getCol() &&
+            playerRow == gasList.get(i).getRow()) {
+
+				if (!camera.getSmokeValue()) {
+					System.out.println("player is in gas");
+				camera.toggleSmokeCamera();
+				
+				} 
+				return;
+
+				
+			}
+		}
+
+		if (camera.getSmokeValue()) {
+			System.out.println("resetting camera smoke value");
+			camera.toggleSmokeCamera();
+		}
+		
+
+	}
 
 	public void update(float tslf) {
 		if (active) {
@@ -217,7 +283,8 @@ private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<G
 
 			// Update the map
 			map.update(tslf);
-
+			drowning();
+			blind();
 			// Update the camera
 			camera.update(tslf);
 		}
@@ -239,6 +306,7 @@ private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<G
 			w = new Water (col, row, tileSize, tileset.getImage("Falling_water"), this, fullness);
 		}		
 		map.addTile(col,row,w);
+		waterList.add(w);
 		int f = 0;
 		if (fullness-1 >= 1) {
 			f = fullness-1;
